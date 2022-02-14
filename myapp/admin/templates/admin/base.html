@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8"/>
+    <meta
+            name="viewport"
+            content="width=device-width, initial-scale=1, shrink-to-fit=no"
+    />
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/css/bootstrap.min.css"
+          integrity="sha384-TX8t27EcRE3e/ihU7zmQxVncDAy5uIKz4rEkgIXeMed4M0jlfIDPvg6uqKI2xXr2" crossorigin="anonymous">
+    <link rel="stylesheet" href="{{ url_for('static',filename='admin/css/styles.css') }}">
+
+
+    <!-- Themify icons -->
+    <link rel="stylesheet" href="{{ url_for('static',filename='admin/themify/themify-icons.css') }}">
+    <link
+          rel="stylesheet"
+          href="https://use.fontawesome.com/releases/v5.13.0/css/all.css"
+          integrity="sha384-Bfad6CLCknfcloXFOyFnlgtENryhrpZCe29RTifKEixXQZ38WheV+i/6YWSzkz3V"
+          crossorigin="anonymous"
+        />
+    <!-- Waves css -->
+    <link rel="stylesheet" href="{{ url_for('static',filename='admin/plugins/css/waves.min.css') }}">
+
+    <title>Media feeds</title>
+
+    <!-- Handel Barjs -->
+    <script src="https://twitter.github.io/typeahead.js/js/handlebars.js"></script>
+        <!-- Optional JavaScript -->
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"
+            integrity="sha512-bLT0Qm9VnAYZDflyKcBaQ2gg0hSYNQrJ8RilYldYQ1FxQYoCLtUjuuRuZo+fjqhx/qtq/1itJ0C2ejDxltZVFg=="
+            crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"
+            integrity="sha384-9/reFTGAW83EW2RDu2S0VKaIzap3H66lZH81PoYlFhbGU+6BZp6G7niu735Sk7lN"
+            crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/js/bootstrap.min.js"
+            integrity="sha384-w1Q4orYjBQndcko6MimVbzY0tgp4pWB4lZ7lr30WKz0vr/aWKhXdBNmNb5D92v7s"
+            crossorigin="anonymous"></script>
+    <!-- Handel bootboxjs -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootbox.js/5.5.2/bootbox.min.js"
+            integrity="sha512-RdSPYh1WA6BF0RhpisYJVYkOyTzK4HwofJ3Q7ivt/jkpW6Vc8AurL1R+4AUcvn9IwEKAPm/fk7qFZW3OuiUDeg==" crossorigin="anonymous"></script>
+
+    <script src="{{ url_for('static',filename='admin/plugins/js/waves.min.js') }}"></script>
+    <!-- Optional JavaScript -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/twbs-pagination/1.4.1/jquery.twbsPagination.min.js"></script>
+
+        <!--momentjs-->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js" integrity="sha512-qTXRIMyZIFb8iQcfjXWCO8+M5Tbc38Qi5WzdPOYZHIlZpzBHG3L3by84BBBOiRGiEb7KKtAOAs5qYdUiZiQNNQ=="
+            crossorigin="anonymous"></script>
+
+    <!-- bootstrap 4 -->
+    <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/bootstrap-block-grid@latest/dist/bootstrap4-block-grid.min.css">
+
+</head>
+
+<body>
+<header class="main-navbar-header">
+    <nav class="navbar navbar-expand-md navbar-dark fixed-top theme-color">
+        <div class="menu-toggle-button">
+            <a class="nav-link wave-effect" href="#" id="sidebarCollapse">
+                <span class="ti-menu"></span>
+            </a>
+        </div>
+        <a class="navbar-brand" href="/admin/Dashboard">Media feeds</a>
+
+        <ul class="navbar-nav ml-auto navbar-top-links">
+            <li class="dropdown">
+                <a
+                        class="dropdown-toggle profile-pic"
+                        data-toggle="dropdown"
+                        href="#"
+                        aria-expanded="false"
+                >
+                    <img
+                            src="{{ url_for('static',filename='uploads/person.png') }}"
+                            alt="user-img"
+                            width="36"
+                            class="img-circle"
+                    />
+                    <b class="d-none d-sm-inline-block" id="fnm">Full Name</b></a
+                >
+                <ul class="dropdown-menu dropdown-user">
+                    <li>
+                        <div class="dw-user-box text-center">
+                            <div class="u-text" >
+                                <p class="text-muted" id="enm">user@mail.com</p>
+                                <p class="text-muted"id="pnm">user@mail.com</p>
+                            </div>
+                        </div>
+                    </li>
+                    <div class="dropdown-divider"></div>
+                    <li>
+                        <a href="/admin/signout"><i class="fa fa-power-off"></i> Logout</a>
+                    </li>
+                </ul>
+                <!-- /.dropdown-user -->
+            </li>
+            <!-- /.dropdown -->
+        </ul>
+    </nav>
+</header>
+<div class="wrapper">
+    <!-- Sidebar Holder -->
+    <nav id="sidebar" class="nav-sidebar">
+        <ul class="list-unstyled components" id="accordion">
+
+            <li>
+                <a
+                        href="#homeSubmenu"
+                        class="accordion-toggle wave-effect"
+                        data-toggle="collapse"
+                        aria-expanded="false"
+                >
+                   <i class="fa fa-home"></i>  Home
+                </a>
+                <ul
+                        class="collapse list-unstyled inside-level collapse show"
+                        id="homeSubmenu"
+                        data-parent="#accordion"
+                >
+                    <li><a href="/admin/Dashboard"><i class="ti-dashboard m-r-10"></i>Dashboard</a></li>
+                    <li><a href="/admin/batchprogress"><i class="fa fa-signal m-r-10"></i>Pending Batch</a></li>
+                    <li><a href="/admin/finishedbatch"><i class="fa fa-list m-r-10"></i> Finished Batch</a></li>
+
+                </ul>
+            </li>
+            <li>
+                <a
+                        href="#pageSubmenu"
+                        class="accordion-toggle wave-effect"
+                        data-toggle="collapse"
+                        aria-expanded="false"
+                ><i class="fas fa-users"></i>  Users</a>
+                <ul
+                        class="collapse list-unstyled inside-level collapse show"
+                        id="pageSubmenu"
+                        data-parent="#accordion"
+                >
+                    <li><a href="/admin/registermembers"><i class="fas fa-plus-circle"></i> Register Members</a></li>
+                    <li><a href="/admin/viewsuspendmembers"><i class="fas fa-ban"></i> Suspend Members</a></li>
+                </ul>
+            </li>
+            <li>
+                <a href="#pageusers"
+                        class="accordion-toggle wave-effect"
+                        data-toggle="collapse"
+                        aria-expanded="false"><i class="fa fa-tasks"></i> Tasks</a>
+                 <ul
+                        class="collapse list-unstyled inside-level collapse show"
+                        id="pageusers"
+                        data-parent="#accordion">
+                    <li><a href="/admin/viewbatch"><i class="fa fa-plus m-r-10"></i>Create Batch</a></li>
+                    <li><a href="/admin/viewassignedbatch"><i class="fa fa-envelope m-r-10"></i> Assign Batch</a></li>
+                </ul>
+            </li>
+            <li>
+                <a href="#pagelocation"
+                        class="accordion-toggle wave-effect"
+                        data-toggle="collapse"
+                        aria-expanded="false"><i class="fas fa-flag"></i> Languages</a>
+                 <ul
+                        class="collapse list-unstyled inside-level collapse show"
+                        id="pagelocation"
+                        data-parent="#accordion">
+                    <li><a href="/admin/languages"><i class="fa fa-plus-square m-r-10"></i> Add Language</a></li>
+                </ul>
+            </li>
+
+            <li>
+                <a href="/admin/checknotification" class="wave-effect">
+                    <i class="fa fa-bell m-r-10"></i>Notifications
+                </a>
+            </li>
+        </ul>
+    </nav>
+    {% block body %}
+    {% endblock %}
+</div>
+
+<script type="text/javascript">
+ getprofile()
+    Handlebars.registerHelper('if_cond', function (v1, operator, v2, options) {
+            switch (operator) {
+                case '==':
+                    return (v1 == v2) ? options.fn(this) : options.inverse(this);
+                case '===':
+                    return (v1 === v2) ? options.fn(this) : options.inverse(this);
+                case '!=':
+                    return (v1 != v2) ? options.fn(this) : options.inverse(this);
+                case '!==':
+                    return (v1 !== v2) ? options.fn(this) : options.inverse(this);
+                case '<':
+                    return (v1 < v2) ? options.fn(this) : options.inverse(this);
+                case '<=':
+                    return (v1 <= v2) ? options.fn(this) : options.inverse(this);
+                case '>':
+                    return (v1 > v2) ? options.fn(this) : options.inverse(this);
+                case '>=':
+                    return (v1 >= v2) ? options.fn(this) : options.inverse(this);
+                case '&&':
+                    return (v1 && v2) ? options.fn(this) : options.inverse(this);
+                case '||':
+                    return (v1 || v2) ? options.fn(this) : options.inverse(this);
+                default:
+                    return options.inverse(this);
+            }
+        });
+       Handlebars.registerHelper('toTitleCase',function titleCase(str) {
+        str = str.toLowerCase().split(' ');
+        for (var i = 0; i < str.length; i++) {
+            str[i] = str[i].charAt(0).toUpperCase() + str[i].slice(1);
+        }
+        return str.join(' ');
+    });
+        Handlebars.registerHelper("math", function(lvalue, operator, rvalue, options) {
+            lvalue = parseFloat(lvalue);
+            rvalue = parseFloat(rvalue);
+
+            return {
+                "+": lvalue + rvalue
+            }[operator];
+        });
+    $(document).ready(function () {
+        $("#sidebarCollapse").on("click", function () {
+            $("#sidebar").toggleClass("active");
+        });
+        Waves.init();
+        Waves.attach(".wave-effect", ["waves-button"]);
+        Waves.attach(".wave-effect-float", ["waves-button", "waves-float"]);
+    });
+        Handlebars.registerHelper('formatDate', function(dateString, format){
+        return new Handlebars.SafeString( moment.unix(dateString).format(format).toUpperCase() );
+    });
+     Handlebars.registerHelper('json', function (context) {
+         return JSON.stringify(context);
+     });
+
+     Handlebars.registerHelper('truncwords', function(text, length) {
+        words = text.split(" ");
+        new_text = text;
+        if (words.length > length){
+            new_text = "";
+            for (var i = 0; i <= length; i++) {
+               new_text += words[i] + " ";
+            }
+            new_text = new_text.trim() + "......"
+        }
+        return new_text;
+    });
+
+function suc(type,msg) {
+     return '<div class="alert alert-'+type+' alert-dismissible"><button type="button" class="close" data-dismiss="alert">&times;</button><strong></strong>'+msg+'</div>'
+ }
+  function getCookie(name) {
+  var value = "; " + document.cookie;
+  var parts = value.split("; " + name + "=");
+  if (parts.length == 2) return parts.pop().split(";").shift();
+}
+function getprofile() {
+    var id="hello"
+	$.ajax({
+		type:'POST',
+		url:'/admin/adminprofile',
+        dataType: 'json',
+        statusCode:{
+               401:function(){
+                   window.location.replace("/admin/")
+               }
+           },
+        headers: {
+                     'X-CSRF-TOKEN': getCookie('csrf_access_token')
+                   },
+		data:{id:id},
+		success:function(data){
+          var json = JSON.parse(data);
+          $('#fnm').html(json[0].name)
+          $('#pnm').html("0"+json[0].phone)
+          $('#enm').html(json[0].email)
+		}
+
+
+	});
+}
+
+</script>
+</body>
+</html>

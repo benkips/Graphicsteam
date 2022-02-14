@@ -1,0 +1,113 @@
+{% extends 'designers/base.html' %}
+{% block body %}
+<div class="container content-area">
+        <div class="row">
+          <div class="col-12">
+            <div class="panel">
+              <div class="m-b-15">
+                <div class="row">
+                      <div class="col-md-6 col-lg-6 mb-2">
+                        <h6>Mobile app clients</h6>
+                        <hr />
+                      </div>
+
+                    <div class=" col-md-6 col-lg-6 mb-2">
+                          <div class="col-sm-12 col-md-6 col-lg-6 float-right">
+                                <input type="search" class="form-control" placeholder="Search" id="srch">
+                          </div>
+                    </div>
+                </div>
+
+                <div id="tb" >
+                    <div class="d-flex justify-content-center">
+                      <div class="spinner-border" role="status">
+                        <span class="sr-only">Loading...</span>
+                      </div>
+                    </div>
+                </div>
+            </div>
+          </div>
+        </div>
+</div>
+
+</div>
+<script id="table-template" type="text/x-handlebars-template">
+{% raw %}
+<div class="table-responsive"  >
+<p>Records found {{ total }}</p>
+  {{#if_cond tabledata '!=' '0'}}
+  <table class="table table-bordered">
+                  <tr>
+                    <th>Full names</th>
+                    <th>Phone</th>
+                    <th>Email</th>
+                    <th>Location</th>
+                    <th>Registered at</th>
+
+                  </tr>
+
+        {{#each tabledata}}
+                  <tr>
+                    <td>{{toTitleCase name}}</td>
+                    <td>0{{phone}}</td>
+                    <td>{{toTitleCase email}}</td>
+                    <td>{{toTitleCase location}}</td>
+                    <td>{{formatDate time "D/M/YYYY HH:mm"}}</td>
+
+                  </tr>
+        {{/each }}
+
+  </table>
+  {{/if_cond}}
+</div>
+<ul id="pagination-demo" class="pagination-sm"></ul>
+{% endraw %}
+</script>
+<script>
+ $(document).ready(function () {
+      var pag="";
+      var searchdata="";
+    masterloadtable("","")
+
+        $('#srch').keyup(function(e){
+        var keycode=e.charCode? e.charCode : e.keyCode;
+        searchdata = $('#srch').val()
+            if(keycode==13 && searchdata.length>1) {
+               masterloadtable(pag,searchdata)
+            }else{
+               masterloadtable(pag,searchdata)
+            }
+        })
+ });
+  function masterloadtable(pg,srch){
+     $.ajax({
+                type: "POST",
+                url: "/designers/appusers",
+                data:{pg:pg,srch:srch},
+                dataType: 'json',
+                success: function (data) {
+                    console.log(data)
+                          var datas = {
+                        "total":data.totalrecords,
+                        "page":data.currentpage,
+                        "tabledata": data.data,
+                    }
+                    templateScript = Handlebars.compile($('#table-template').html());
+                    $("#tb").html(templateScript(datas));
+                    //load my pages'
+                        if(data.totalpages!='null') {
+                            $('#pagination-demo').twbsPagination({
+                                totalPages: data.totalpages,
+                                visiblePages: 3,
+                                startPage: data.currentpage,
+                                initiateStartPageClick: false,
+                                onPageClick: function (event, page) {
+                                    masterloadtable(page,srch)
+                                }
+                            });
+                        }
+            }
+     });
+ }
+</script>
+{% endblock %}

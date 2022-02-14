@@ -1,0 +1,177 @@
+{% extends 'admin/base.html' %}
+{% block body %}
+ <div class="container content-area">
+        <div class="row">
+          <div class="col-md-6 offset-md-3">
+            <div class="panel">
+              <div class="m-b-15">
+                <h6>Assign Batch</h6>
+                <hr />
+              </div>
+              <div class="form-responsive" >
+             <div><h5 class="text-center">Assign Batch</h5></div>
+             <div id="responseadd"></div>
+                  <form method="post" enctype="multipart/form-data" id="lform" onsubmit="assignbatch(event)">
+                      <div class="form-group">
+                          <label> Unassigned batches</label>
+                          <select class="custom-select" id="md" name="unbatches">
+                          </select>
+                      </div>
+
+                      <div class="form-group">
+                          <label> Members</label>
+                          <select class="custom-select" id="md2" name="member">
+
+                          </select>
+                      </div>
+
+
+                      <button id="btncupdate" class="btn btn-primary btn-block">
+                          assign
+                      </button>
+                  </form>
+              </div>
+            </div>
+          </div>
+        </div>
+</div>
+<script id="modaltemplate" type="text/x-handlebars-template">
+{% raw %}
+{{#each sdata}}
+ {{#if_cond batchname "==" "nolanguages exists"}}
+   <option selected  value='{{ batchname }}'>{{toTitleCase batchname}}</option>
+ {{ else }}
+   <option value='{{ id }}'>{{toTitleCase batchname}}</option>
+ {{/if_cond}}
+
+{{/each }}
+
+{% endraw %}
+</script>
+<script id="modaltemplatetwo" type="text/x-handlebars-template">
+{% raw %}
+{{#each toedit}}
+ {{#if_cond name "==" "no members exists"}}
+   <option selected value='{{ name }}'>{{toTitleCase name}}</option>
+ {{ else }}
+   <option value='{{ id }}'>{{toTitleCase name}}</option>
+ {{/if_cond}}
+
+{{/each }}
+
+{% endraw %}
+</script>
+
+<script>
+ $(document).ready(function () {
+  ftchdata()
+});
+function assignbatch(e) {
+     e.preventDefault();
+     var form= $('#lform')[0];
+     var formdata = new FormData(form);
+      $.ajax({
+                type: "POST",
+                url: "/admin/viewassignedbatch",
+                processData: false,
+                contentType: false,
+                statusCode: {
+                    401: function () {
+                        window.location.replace("/admin/")
+                    }
+                },
+                headers: {
+                    'X-CSRF-TOKEN': getCookie('csrf_access_token')
+                },
+                dataType: 'json' ,
+                beforeSend: function () {
+                  $("#responseadd").html(suc("info", "processing....please wait"))
+                },
+                data: formdata,
+                success: function (data) {
+                    if(data.suc){
+                        $("#responseadd").html(suc("success", data.suc))
+
+                        ftchdata()
+                        var mid=$('#md2').val()
+                        var batch=$('#md option:selected').text();
+                        asignnotification(mid,"assigned "+batch+" kindly work on it then submit")
+                        $('#lform')[0].reset()
+                    }else{
+                        $("#responseadd").html(suc("danger", data.err))
+                    }
+
+                }
+            });
+
+}
+function ftchdata() {
+            $.ajax({
+                type: 'POST',
+                url: '/admin/membersforbatchasignment',
+                dataType: 'json',
+                statusCode: {
+                    401: function () {
+                        window.location.replace("/admin/")
+                    }
+                },
+                headers: {
+                    'X-CSRF-TOKEN': getCookie('csrf_access_token')
+                },
+                success: function (data) {
+                  	$.ajax({
+                            type:'POST',
+                            url:'/admin/inncompletebatchforasignment',
+                            dataType: 'json',
+                            statusCode: {
+                                401: function () {
+                                    window.location.replace("/admin/")
+                                }
+                            },
+                            headers: {
+                                'X-CSRF-TOKEN': getCookie('csrf_access_token')
+                            },
+                            success:function(dataa){
+                                console.log(dataa.data)
+                                var datas = {
+                                "sdata":dataa.data,
+                                 }
+                                 var dataz = {
+                                "toedit": data.data,
+                                 }
+                                 templateScript = Handlebars.compile($('#modaltemplate').html());
+                                 $("#md").html(templateScript(datas));
+
+                                 templateScript = Handlebars.compile($('#modaltemplatetwo').html());
+                                 $("#md2").html(templateScript(dataz));
+                            }
+                            });
+
+                }
+
+            });
+        }
+  function asignnotification(mid,action) {
+	$.ajax({
+		type:'POST',
+		url:'/admin/addnotifiction',
+        dataType: 'json',
+        statusCode:{
+               401:function(){
+                   window.location.replace("/admin/")
+               }
+           },
+        headers: {
+                     'X-CSRF-TOKEN': getCookie('csrf_access_token')
+                   },
+		data:{mid:mid,action:action},
+		success:function(data){
+
+		}
+
+
+	});
+}
+</script>
+
+{% endblock %}

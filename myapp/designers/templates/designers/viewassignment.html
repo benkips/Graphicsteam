@@ -1,0 +1,242 @@
+{% extends 'designers/base.html' %}
+{% block body %}
+    <div class="container content-area">
+        <div class="row">
+            <div class="col-12">
+                <div class="panel">
+                    <div class="m-b-15">
+                        <div class="row">
+                            <div class="col-md-6 col-lg-6 mb-2">
+                                <h6>Pending Assignments</h6>
+                                <hr/>
+                            </div>
+
+                            <div class=" col-md-6 col-lg-6 mb-2">
+                                <div class="row">
+                                    <div class=" col-md-8 col-lg-8 mb-2 ">
+                                        <input type="search" class="fa form-control" placeholder="&#xf002; Search batch"
+                                               id="srch">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="tb">
+                            <div class="d-flex justify-content-center">
+                                <div class="spinner-border" role="status">
+                                    <span class="sr-only">Loading...</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+    <div id="myModal" class="modal fade">
+        <div class="modal-dialog">
+            <!-- Modal content-->
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">Batch details</h5>
+                    <button type="button" class="close" data-dismiss="modal">×</button>
+                </div>
+                <div class="modal-body" id="md">
+
+
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="nuggetsmodal" class="modal fade">
+        <div class="modal-dialog">
+            <!-- Modal content-->
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">Batch details</h5>
+                    <button type="button" class="close" data-dismiss="modal">×</button>
+                </div>
+                <div class="modal-body" id="ng">
+
+                </div>
+            </div>
+        </div>
+    </div>
+    <script id="table-template" type="text/x-handlebars-template">
+{% raw %}
+<div class="table-responsive"  >
+<p>Records found {{ total }}</p>
+  {{#if_cond tabledata '!=' '0'}}
+  <table class="table table-bordered">
+                  <tr>
+                    <th>No</th>
+                    <th>Batchname</th>
+                    <th>Batch</th>
+                    <th>Assigned to</th>
+                    <th>Assigned on</th>
+                    <th>Status</th>
+                    <th>Mark as completed</th>
+                  </tr>
+
+        {{#each tabledata}}
+                  <tr>
+                    <td>{{math @index "+" 1	}}</td>
+                    <td>{{ toTitleCase batchname}}</td>
+                    <td>{{truncwords batch "20"}} <a  href="/designers/seenugg?id={{batch}}">view all</a></td>
+                    <td>{{ toTitleCase name}}</td>
+                    <td>{{formatDate timeassigned "D/M/YYYY HH:mm"}}</td>
+                    <td>
+                      {{#if_cond status "==" 0}}
+                        <a  class="btn btn-danger btn-delete btn-sm mb-2" >Pending</a>
+                      {{else}}
+                        <a  class="btn btn-primary btn-delete btn-sm mb-2" >Complete</a>
+                      {{/if_cond}}
+                    </td>
+                    <td>
+                        <a  class="btn btn-success  btn-success btn-sm mb-2" onclick="markascomplete('{{nid}}','{{aid}}')">
+                        {{#if_cond status "==" 0}}mark as finished {{else}}mark as unfinished {{/if_cond}}
+                        </a>
+                    </td>
+
+                  </tr>
+        {{/each }}
+
+  </table>
+  {{/if_cond}}
+</div>
+<ul id="pagination-demo" class="pagination-sm"></ul>
+{% endraw %}
+</script>
+
+<script id="shwtemplate" type="text/x-handlebars-template">
+{% raw %}
+<p>{{ selectdata }}</p>
+{% endraw %}
+</script>
+
+    <script>
+        $(document).ready(function () {
+            var pag = "";
+            var searchdata = "";
+            masterloadtable("", "")
+
+            $('#srch').keyup(function (e) {
+                var keycode = e.charCode ? e.charCode : e.keyCode;
+                searchdata = $('#srch').val()
+                if (keycode == 13 && searchdata.length > 1) {
+                    masterloadtable(pag, searchdata)
+                } else {
+                    masterloadtable(pag, searchdata)
+                }
+            })
+        });
+
+        function masterloadtable(pg, srch) {
+            $.ajax({
+                type: "POST",
+                url: "/designers/viewassignments",
+                data: {pg: pg, srch: srch},
+                dataType: 'json',
+                statusCode: {
+                    401: function () {
+                        window.location.replace("/designers/")
+                    }
+                },
+                headers: {
+                    'X-CSRF-TOKEN': getCookie('csrf_access_token')
+                },
+                success: function (data) {
+                    console.log(data)
+                    var datas = {
+                        "total": data.totalrecords,
+                        "page": data.currentpage,
+                        "tabledata": data.data,
+                    }
+                    templateScript = Handlebars.compile($('#table-template').html());
+                    $("#tb").html(templateScript(datas));
+                    //load my pages'
+                    if (data.totalpages != 'null') {
+                        $('#pagination-demo').twbsPagination({
+                            totalPages: data.totalpages,
+                            visiblePages: 3,
+                            startPage: data.currentpage,
+                            initiateStartPageClick: false,
+                            onPageClick: function (event, page) {
+                                masterloadtable(page, srch)
+                            }
+                        });
+                    }
+                }
+            });
+        }
+
+        function markascomplete(nid,aid) {
+            bootbox.confirm({
+                size: "small",
+                message: "Are you sure you  have finished this  batch?",
+                callback: function (result) {
+                    if (result) {
+                        $.ajax({
+                            type: 'POST',
+                            url: '/designers/markascomplete',
+                            dataType: 'json',
+                            statusCode: {
+                                401: function () {
+                                    window.location.replace("/designers/")
+                                }
+                            },
+                            headers: {
+                                'X-CSRF-TOKEN': getCookie('csrf_access_token')
+                            },
+                            data: {nid: nid, aid: aid},
+                            success: function (data) {
+                                 masterloadtable("", "")
+                                 bootbox.alert({
+                                     message: data.suc
+                                 })
+                                asignnotification("1","has completed an assignment kindly check and verify")
+
+                            }
+
+                        });
+
+                    }
+
+                }
+            })
+
+        }
+
+function asignnotification(mid,action) {
+	$.ajax({
+		type:'POST',
+		url:'/designers/addnotifictiontoadmin',
+        dataType: 'json',
+        statusCode:{
+               401:function(){
+                   window.location.replace("/designers/")
+               }
+           },
+        headers: {
+                     'X-CSRF-TOKEN': getCookie('csrf_access_token')
+                   },
+		data:{mid:mid,action:action},
+		success:function(data){
+
+		}
+
+
+	});
+}
+function shownugg2(txt) {
+    var datas = {
+                 "selectdata": txt,
+                 }
+    templateScript = Handlebars.compile($('#shwtemplate').html());
+    $("#ng").html(templateScript(datas));
+
+}
+
+    </script>
+{% endblock %}

@@ -1,0 +1,108 @@
+{% extends 'admin/base.html' %}
+{% block body %}
+    <div class="container content-area">
+        <div class="row">
+            <div class="col-12">
+                <div class="panel">
+                    <div class="m-b-15">
+                        <div class="row">
+                            <div class="col-md-6 col-lg-6 mb-2">
+                                <h6>Notifications</h6>
+                                <hr/>
+                            </div>
+
+                        </div>
+
+                        <div id="tb">
+                            <div class="d-flex justify-content-center">
+                                <div class="spinner-border" role="status">
+                                    <span class="sr-only">Loading...</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+    <script id="table-template" type="text/x-handlebars-template">
+{% raw %}
+<p>Records found {{ total }}</p>
+  {{#if_cond tabledata '!=' '0'}}
+    <div class="row">
+        {{#each tabledata}}
+             <div class="col-12">
+               <div class="alert alert-info" role="alert">
+                  <h4 class="alert-heading">Info!</h4>
+                  <p>{{notification}}</p>
+                  <hr>
+                </div>
+            </div>
+        {{/each }}
+
+  </div>
+  {{/if_cond}}
+<ul id="pagination-demo" class="pagination-sm"></ul>
+{% endraw %}
+</script>
+    <script>
+        $(document).ready(function () {
+
+            var pag = "";
+            var searchdata = "";
+            masterloadtable("", "")
+
+            $('#srch').keyup(function (e) {
+                var keycode = e.charCode ? e.charCode : e.keyCode;
+                searchdata = $('#srch').val()
+                if (keycode == 13 && searchdata.length > 1) {
+                    masterloadtable(pag, searchdata)
+                } else {
+                    masterloadtable(pag, searchdata)
+                }
+            })
+        });
+
+        function masterloadtable(pg, srch) {
+            $.ajax({
+                type: "POST",
+                url: "/admin/notificationdashboard",
+                data: {pg: pg, srch: srch},
+                dataType: 'json',
+                statusCode: {
+                    401: function () {
+                        window.location.replace("/admin/")
+                    }
+                },
+                headers: {
+                    'X-CSRF-TOKEN': getCookie('csrf_access_token')
+                },
+                success: function (data) {
+                    console.log(data)
+                    var datas = {
+                        "total": data.totalrecords,
+                        "page": data.currentpage,
+                        "tabledata": data.data,
+                    }
+                    templateScript = Handlebars.compile($('#table-template').html());
+                    $("#tb").html(templateScript(datas));
+                    //load my pages'
+                    if (data.totalpages != 'null') {
+                        $('#pagination-demo').twbsPagination({
+                            totalPages: data.totalpages,
+                            visiblePages: 3,
+                            startPage: data.currentpage,
+                            initiateStartPageClick: false,
+                            onPageClick: function (event, page) {
+                                masterloadtable(page, srch)
+                            }
+                        });
+                    }
+                }
+            });
+        }
+
+
+    </script>
+{% endblock %}

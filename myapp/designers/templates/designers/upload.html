@@ -1,0 +1,172 @@
+{% extends 'designers/base.html' %}
+{% block body %}
+    <div class="container content-area">
+        <div class="row">
+            <div class="col-md-8 offset-md-2">
+                <div class="panel">
+                    <div class="m-b-15">
+                        <h6>Uploads </h6>
+                        <hr/>
+                    </div>
+                    <div class="form-responsive">
+                        <div id="responseadd"></div>
+                        <form method="post" enctype="multipart/form-data" id="cform" onsubmit="asgnbatch(event)">
+                            <div class="form-group">
+                                <label> Select the assigned batch</label>
+                                <select class="custom-select" id="md" name="asbatches">
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-check-label" for="aboutFile">Upload image</label>
+                                <br>
+                                <input type="file" id="uploadedfile" name="uploadedfile" required/>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-8 offset-md-2">
+                                    <img
+                                            src="https://placehold.it/200x200"
+                                            id="preview"
+                                            width="200"
+                                            class="thumbnail"
+                                            style="display: none"
+                                    />
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="lang">Tag </label>
+                                <input type="text" class="form-control" id="tags" name="tags" required
+                                       autocomplete="off" placeholder="1 or 2"/>
+                                <small id="loco" class="form-text text-muted"
+                                >This is the number of nugget in batch</small>
+                            </div>
+                            <button id="btnsubmit" class="btn btn-primary btn-block">
+                                submit nugget
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="myModal" class="modal fade">
+        <div class="modal-dialog">
+            <!-- Modal content-->
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">Edit</h5>
+                    <button type="button" class="close" data-dismiss="modal">×</button>
+                </div>
+                <div class="modal-body" id="md">
+                </div>
+            </div>
+        </div>
+    </div>
+<script id="modaltemplate" type="text/x-handlebars-template">
+{% raw %}
+{{#each sdata}}
+ {{#if_cond batchname "==" "no assignments pending"}}
+   <option selected  value='{{ batchname }}'>{{toTitleCase batchname}}</option>
+ {{ else }}
+   <option value='{{ id }}'>{{toTitleCase batchname}}</option>
+ {{/if_cond}}
+
+{{/each }}
+
+{% endraw %}
+</script>
+    <script>
+$(document).ready(function () {
+  ftchdataa()
+});
+
+        function asgnbatch(e) {
+            e.preventDefault();
+            var form = $('#cform')[0];
+            var formdata = new FormData(form);
+            $.ajax({
+                type: "POST",
+                url: "/designers/uploads",
+                processData: false,
+                contentType: false,
+                headers: {
+                    'X-CSRF-TOKEN': getCookie('csrf_access_token')
+                },
+                statusCode: {
+                    401: function () {
+                        window.location.replace("/designers/index")
+                    }
+                },
+                dataType: 'json',
+                beforeSend: function () {
+                    $("#responseadd").html(suc("info", "processing....please wait"))
+                },
+                data: formdata,
+                success: function (data) {
+                    if (data.suc) {
+                        $("#responseadd").html(suc("success", data.suc))
+                        $('#preview').hide()
+                        $('#cform')[0].reset()
+                    } else {
+                        $("#responseadd").html(suc("danger", data.err))
+                    }
+
+                }
+            });
+
+        }
+
+        $("#uploadedfile").change(function () {
+
+            var extension = $('#uploadedfile').val().split('.').pop().toLowerCase();
+
+            if ($.inArray(extension, ['png', 'jpg', 'jpeg']) == -1) {
+                alert('Sorry, invalid extension.');
+                return false;
+            } else {
+                preview(this)
+            }
+
+        });
+function preview(thisParameter) {
+    var file=(thisParameter).files[0];
+		var reader=new FileReader();
+		reader.onload=function(){
+		$('#preview').attr({
+			"src":reader.result
+		});
+
+		}
+		reader.readAsDataURL(event.target.files[0])
+        $('#preview').show()
+
+}
+function ftchdataa() {
+            $.ajax({
+                type: 'POST',
+                url: '/designers/membersasignments',
+                dataType: 'json',
+                statusCode: {
+                    401: function () {
+                        window.location.replace("/designers/index")
+                    }
+                },
+                headers: {
+                    'X-CSRF-TOKEN': getCookie('csrf_access_token')
+                },
+                success: function (data) {
+
+                                var datas = {
+                                "sdata":data.data,
+                                 }
+                                 templateScript = Handlebars.compile($('#modaltemplate').html());
+                                 $("#md").html(templateScript(datas));
+
+
+                }
+
+            });
+        }
+</script>
+{% endblock %}

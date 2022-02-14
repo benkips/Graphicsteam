@@ -1,0 +1,249 @@
+{% extends 'designers/base.html' %}
+{% block body %}
+    <div class="container content-area">
+        <div class="row">
+            <div class="col-12">
+                <div class="panel">
+                    <div class="m-b-15">
+                        <h6>Welcome </h6>
+                        <hr/>
+                    </div>
+                    <div id="db">
+                        <div class="d-flex justify-content-center">
+                            <div class="spinner-border" role="status">
+                                <span class="sr-only">Loading...</span>
+                            </div>
+                        </div>
+
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12 col-lg-12 mb-2">
+                                <h6>Recent Notifications</h6>
+                                <hr/>
+                        <div id="nb">
+                            <div class="d-flex justify-content-center">
+                                <div class="spinner-border" role="status">
+                                    <span class="sr-only">Loading...</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    </div>
+
+
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <div id="myModal" class="modal fade">
+        <div class="modal-dialog">
+            <!-- Modal content-->
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">Edit</h5>
+                    <button type="button" class="close" data-dismiss="modal">×</button>
+                </div>
+                <div class="modal-body" id="md">
+                </div>
+            </div>
+        </div>
+    </div>
+<script id="db-template" type="text/x-handlebars-template">
+{% raw %}
+  {{#if_cond total '!=' '0'}}
+    <div class="row">
+        {{#each dbdata}}
+             <div class="col-sm-6 col-md-6 col-lg-4 mt-3">
+                            <div class="card">
+                                <div class="content">
+                                    <div class="row">
+                                        <div class="col-sm-4">
+                                            <div class="icon-big text-center">
+                                                <i class="teal fas fa-envelope"></i>
+                                            </div>
+                                        </div>
+                                        <div class="col-sm-8">
+                                            <div class="detail">
+                                                <p class="detail-subtitle"> batch</p>
+                                                <span class="number">{{mem}}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="footer">
+                                        <hr />
+                                        <div class="stats">
+                                            <i class="fas fa-calendar"></i> batch done
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    <div class="col-sm-6 col-md-6 col-lg-4 mt-3">
+                            <div class="card">
+                                <div class="content">
+                                    <div class="row">
+                                        <div class="col-sm-4">
+                                            <div class="icon-big text-center">
+                                                <i class="olive fas fa-flag"></i>
+                                            </div>
+                                        </div>
+                                        <div class="col-sm-8">
+                                            <div class="detail">
+                                                <p class="detail-subtitle">Languages</p>
+                                                <span class="number">{{lang}}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="footer">
+                                        <hr />
+                                        <div class="stats">
+                                            <i class="fas fa-calendar"></i> languages available
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    <div class="col-sm-6 col-md-6 col-lg-4 mt-3">
+                            <div class="card">
+                                <div class="content">
+                                    <div class="row">
+                                        <div class="col-sm-4">
+                                            <div class="icon-big text-center">
+                                                <i class="violet fas fa-eye"></i>
+                                            </div>
+                                        </div>
+                                        <div class="col-sm-8">
+                                            <div class="detail">
+                                                <p class="detail-subtitle">Nuggets</p>
+                                                <span class="number">{{ph}}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="footer">
+                                        <hr />
+                                        <div class="stats">
+                                            <i class="fas fa-stopwatch"></i> all nuggets in the system
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+        {{/each }}
+
+  </div>
+  {{/if_cond}}
+<ul id="pagination-demo" class="pagination-sm"></ul>
+{% endraw %}
+</script>
+<script id="noti-template" type="text/x-handlebars-template">
+{% raw %}
+<p>latest <span class="badge badge-danger">{{ total }}</span></p>
+  {{#if_cond total '!=' '0'}}
+    <div class="row">
+        {{#each ndata}}
+             <div class="col-12">
+               <div class="alert alert-success" role="alert">
+                  <p>{{notification}}</p>
+                </div>
+            </div>
+        {{/each }}
+
+  </div>
+  {{/if_cond}}
+<ul id="pagination-demo" class="pagination-sm"></ul>
+{% endraw %}
+</script>
+<script>
+$(document).ready(function () {
+     var pag="";
+     var searchdata="";
+    dashboard(pag,searchdata)
+    masternloadtable(pag,searchdata)
+
+
+
+
+    $('#srch').keyup(function(e){
+    var keycode=e.charCode? e.charCode : e.keyCode;
+    searchdata = $('#srch').val()
+        if(keycode==13 && searchdata.length>1) {
+           masternloadtable(pag,searchdata)
+        }else{
+           masternloadtable(pag,searchdata)
+        }
+    })
+
+
+});
+ function dashboard(pg,srch){
+     $.ajax({
+                type: "POST",
+                url: "/designers/dashboarddatadesigner",
+                data:{pg:pg,srch:srch},
+                dataType: 'json',
+                statusCode: {
+                    401: function () {
+                        window.location.replace("/designers/")
+                    }
+                },
+                headers: {
+                    'X-CSRF-TOKEN': getCookie('csrf_access_token')
+                },
+                success: function (data) {
+                    var datas = {
+                        "total":data.totalrecords,
+                        "page":data.currentpage,
+                        "dbdata": data.data,
+                    }
+                    console.log(datas)
+                    templateScript = Handlebars.compile($('#db-template').html());
+                    $("#db").html(templateScript(datas));
+
+                }
+            });
+ }
+  function masternloadtable(pg,srch){
+     $.ajax({
+                type: "POST",
+                url: "/designers/notificationdashboarddesigner",
+                data:{pg:pg,srch:srch},
+                dataType: 'json',
+                statusCode: {
+                    401: function () {
+                        window.location.replace("/designers/")
+                    }
+                },
+                headers: {
+                    'X-CSRF-TOKEN': getCookie('csrf_access_token')
+                },
+                success: function (data) {
+                    var datas = {
+                        "total":data.totalrecords,
+                        "page":data.currentpage,
+                        "ndata": data.data,
+                    }
+                    templateScript = Handlebars.compile($('#noti-template').html());
+                    $("#nb").html(templateScript(datas));
+                    //load my pages'
+                        if(data.totalpages!='null') {
+                            $('#pagination-demo').twbsPagination({
+                                totalPages: data.totalpages,
+                                visiblePages: 3,
+                                startPage: data.currentpage,
+                                initiateStartPageClick: false,
+                                onPageClick: function (event, page) {
+                                    masternloadtable(page, srch)
+                                }
+                            });
+                        }
+
+
+                }
+            });
+ }
+</script>
+
+{% endblock %}

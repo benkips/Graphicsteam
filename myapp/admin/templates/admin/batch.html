@@ -1,0 +1,447 @@
+{% extends 'admin/base.html' %}
+{% block body %}
+    <div class="container content-area">
+        <div class="row">
+            <div class="col-12">
+                <div class="panel">
+                    <div class="m-b-15">
+                        <div class="row">
+                            <div class="col-md-6 col-lg-6 mb-2">
+                                <h6>Create batch</h6>
+                                <hr/>
+                            </div>
+
+                            <div class=" col-md-6 col-lg-6 mb-2">
+                                <div class="row">
+                                    <div class="col-md-6 col-lg-6 mb-2">
+                                        <button data-target="#myModal" data-toggle="modal" onclick="showaddservice()"
+                                                class="btn btn-primary btn-small float-right">
+                                            <i class="ti-plus"></i>
+                                            add batch
+                                        </button>
+                                    </div>
+                                    <div class=" col-md-6 col-lg-6 mb-2">
+                                        <input type="search" class="fa form-control" placeholder="&#xf002; Search"
+                                               id="srch">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="tb">
+                            <div class="d-flex justify-content-center">
+                                <div class="spinner-border" role="status">
+                                    <span class="sr-only">Loading...</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+    <div id="myModal" class="modal fade">
+        <div class="modal-dialog">
+            <!-- Modal content-->
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">Batch details</h5>
+                    <button type="button" class="close" data-dismiss="modal">×</button>
+                </div>
+                <div class="modal-body" id="md">
+
+
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="nuggetsmodal" class="modal fade">
+        <div class="modal-dialog">
+            <!-- Modal content-->
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">Batch details</h5>
+                    <button type="button" class="close" data-dismiss="modal">×</button>
+                </div>
+                <div class="modal-body" id="ng">
+
+                </div>
+            </div>
+        </div>
+    </div>
+    <script id="table-template" type="text/x-handlebars-template">
+{% raw %}
+<div class="table-responsive"  >
+<p>Records found {{ total }}</p>
+  {{#if_cond tabledata '!=' '0'}}
+  <table class="table table-bordered">
+                  <tr>
+                    <th>No</th>
+                    <th>Batchname</th>
+                    <th>Batch</th>
+                    <th>Language</th>
+                    <th>Priority</th>
+                    <th>Psdlink</th>
+                    <th>Posted on</th>
+                    <th>Action</th>
+                    <th>Status</th>
+                  </tr>
+
+        {{#each tabledata}}
+                  <tr>
+                    <td>{{math @index "+" 1	}}</td>
+                    <td>{{toTitleCase batchname}}</td>
+                    <td>{{truncwords batch "20"}} <a  href="/admin/seebatch?id={{batch}}">view all</a></td>
+                    <td>{{toTitleCase language}}</td>
+                    <td>{{priority}}</td>
+                    <td><a href="{{psdlink}}" target="blank" >G-drive</a></td>
+                    <td>{{formatDate postedon "D/M/YYYY HH:mm"}}</td>
+                    <td>
+                        <a data-target="#myModal" data-toggle="modal" class="btn btn-success btn-sm mb-2" onclick="edit('{{id}}')" >edit</a>
+                        <a  class="btn btn-danger btn-delete btn-sm mb-2" onclick="deletebatch('{{id}}')" >delete</a>
+                    </td>
+                    <td>
+                      {{#if_cond assigned "==" 0}}
+                        <a  class="btn btn-warning btn-delete btn-sm mb-2" >Unassigned</a>
+                      {{else}}
+                        <a  class="btn btn-primary btn-delete btn-sm mb-2" >Assigned</a>
+                      {{/if_cond}}
+                    </td>
+
+                  </tr>
+        {{/each }}
+
+  </table>
+  {{/if_cond}}
+</div>
+<ul id="pagination-demo" class="pagination-sm"></ul>
+{% endraw %}
+</script>
+<script id="modaltemplatez" type="text/x-handlebars-template">
+{% raw %}
+ <div><h5 class="text-center">Add batch</h5></div>
+ <div id="responseadd"></div>
+  <form method="post"  enctype="multipart/form-data" id="aform" onsubmit="addbatch(event)">
+
+                    <div class="form-group">
+                     <label>Batchname</label>
+                     <input type="text" name="batchname" id="batchname"  class="form-control" placeholder="batchname" required autocomplete="off"/>
+                     </div>
+                     <div class="form-group">
+                     <label> Language</label>
+                         <select class="custom-select" id="opt" name="language">
+                            {{#each selectdata }}
+                               <option value='{{languagename}}'>{{languagename}}</option>
+                            {{/each }}
+                         </select>
+                     </div>
+
+                     <div class="form-group">
+                     <label for="desc">Batch</label>
+                     <textarea class="form-control" id="batch" name="batch" placeholder="Batch itself" required autocomplete="off"></textarea>
+                     </div>
+
+                     <div class="form-group">
+                     <label> Priority</label>
+                         <select class="custom-select" id="priority" name="priority">
+                               <option value='high'>High</option>
+                               <option value='low'>Low</option>
+                         </select>
+                     </div>
+
+                      <div class="form-group">
+                     <label>PSD link</label>
+                     <input type="text" name="psdlink" id="psdlink"  class="form-control" placeholder="Psd link" required autocomplete="off"/>
+                     </div>
+
+                    <button   id="btncupdate" class="btn btn-primary btn-block">
+                       save
+                    </button>
+
+  </form>
+{% endraw %}
+</script>
+ <script id="modaltemplate" type="text/x-handlebars-template">
+{% raw %}
+{{#each toedit }}
+ <div><h5 class="text-center">Edit member</h5></div>
+ <div id="responseupdate"></div>
+  <form method="post"  enctype="multipart/form-data" id="eform" onsubmit="editbatch(event)">
+                   <input type="hidden"  name="mid"  id="mid" value="{{id}}">
+                   <div class="form-group">
+                     <label>Batchname</label>
+                     <input type="text" name="batchname" id="batchname" value="{{ batchname }}"  class="form-control" placeholder="batchname" required autocomplete="off"/>
+                     </div>
+                     <div class="form-group">
+                     <label> Language</label>
+                         <select class="custom-select" id="opt" name="language">
+                              {{#each ../sdata}}
+                               {{#if_cond languagename "==" "nolanguages exists"}}
+                               <option selected  value='{{languagename}}'>{{languagename}}</option>
+                               {{ else }}
+                                <option value='{{languagename}}' {{#if_cond languagename "=="../language}} selected {{/if_cond}}>{{toTitleCase languagename}}</option>
+                               {{/if_cond}}
+
+                              {{/each }}
+                         </select>
+                     </div>
+
+                     <div class="form-group">
+                     <label for="desc">Batch</label>
+                     <textarea class="form-control" id="batch" name="batch"   placeholder="Batch itself" required autocomplete="off">{{batch}}</textarea>
+                     </div>
+
+                     <div class="form-group">
+                     <label> Priority</label>
+                         <select class="custom-select" id="priority" name="priority" >
+                               {{#if_cond priority "==" "high"}}
+                               <option selected  value='high'>High</option>
+                               <option value='low'>Low</option>
+                               {{else}}
+                               <option selected value='low'>Low</option>
+                               <option  value='high'>High</option>
+                               {{/if_cond}}
+                         </select>
+                     </div>
+
+                      <div class="form-group">
+                     <label>PSD link</label>
+                     <input type="text" name="psdlink" id="psdlink"  class="form-control" value="{{psdlink}}" placeholder="Psd link" required autocomplete="off"/>
+                     </div>
+
+                    <button   id="btncupdate" class="btn btn-primary btn-block">
+                       save
+                    </button>
+  </form>
+  {{/each}}
+{% endraw %}
+</script>
+
+<script id="shwtemplate" type="text/x-handlebars-template">
+{% raw %}
+<p>{{ selectdata }}</p>
+{% endraw %}
+</script>
+    <script>
+        $(document).ready(function () {
+            var pag = "";
+            var searchdata = "";
+            masterloadtable("", "")
+
+            $('#srch').keyup(function (e) {
+                var keycode = e.charCode ? e.charCode : e.keyCode;
+                searchdata = $('#srch').val()
+                if (keycode == 13 && searchdata.length > 1) {
+                    masterloadtable(pag, searchdata)
+                } else {
+                    masterloadtable(pag, searchdata)
+                }
+            })
+        });
+
+        function masterloadtable(pg, srch) {
+            $.ajax({
+                type: "POST",
+                url: "/admin/viewbatch",
+                data: {pg: pg, srch: srch},
+                dataType: 'json',
+                statusCode: {
+                    401: function () {
+                        window.location.replace("/admin/")
+                    }
+                },
+                headers: {
+                    'X-CSRF-TOKEN': getCookie('csrf_access_token')
+                },
+                success: function (data) {
+                    console.log(data)
+                    var datas = {
+                        "total": data.totalrecords,
+                        "page": data.currentpage,
+                        "tabledata": data.data,
+                    }
+                    templateScript = Handlebars.compile($('#table-template').html());
+                    $("#tb").html(templateScript(datas));
+                    //load my pages'
+                    if (data.totalpages != 'null') {
+                        $('#pagination-demo').twbsPagination({
+                            totalPages: data.totalpages,
+                            visiblePages: 3,
+                            startPage: data.currentpage,
+                            initiateStartPageClick: false,
+                            onPageClick: function (event, page) {
+                                masterloadtable(page, srch)
+                            }
+                        });
+                    }
+                }
+            });
+        }
+        function showaddservice() {
+                $.ajax({
+                    type:'POST',
+                    url:'/admin/languageforbatch',
+                    dataType: 'json',
+                    statusCode: {
+                                401: function () {
+                                    window.location.replace("/admin/")
+                                }
+                     },
+                     headers: {
+                                'X-CSRF-TOKEN': getCookie('csrf_access_token')
+                            },
+                    success:function(data){
+                        var datas = {
+                         "selectdata": data.data,
+                         }
+                    templateScript = Handlebars.compile($('#modaltemplatez').html());
+                    $("#md").html(templateScript(datas));
+                    }
+            });
+            }
+        function addbatch(e) {
+            e.preventDefault();
+            var form = $('#aform')[0];
+            var formdata = new FormData(form);
+            $.ajax({
+                type: "POST",
+                url: "/admin/addbatch",
+                processData: false,
+                contentType: false,
+                statusCode: {
+                    401: function () {
+                        window.location.replace("/admin/")
+                    }
+                },
+                headers: {
+                    'X-CSRF-TOKEN': getCookie('csrf_access_token')
+                },
+                dataType: 'json',
+                beforeSend: function () {
+                    $("#responseadd").html(suc("info", "processing....please wait"))
+                },
+                data: formdata,
+                success: function (data) {
+                    if (data.suc) {
+                        $("#responseadd").html(suc("success", data.suc))
+                        masterloadtable("", "")
+                        $('#aform')[0].reset()
+                    } else {
+                        $("#responseadd").html(suc("danger", data.err))
+                    }
+
+                }
+            });
+
+        }
+        function edit(id) {
+            $.ajax({
+                type: 'POST',
+                url: '/admin/editbatch',
+                dataType: 'json',
+                statusCode: {
+                    401: function () {
+                        window.location.replace("/admin/")
+                    }
+                },
+                headers: {
+                    'X-CSRF-TOKEN': getCookie('csrf_access_token')
+                },
+                data: {id: id},
+                success: function (data) {
+                  	$.ajax({
+                            type:'POST',
+                            url:'/admin/languageforbatch',
+                            dataType: 'json',
+                            statusCode: {
+                                401: function () {
+                                    window.location.replace("/admin/")
+                                }
+                            },
+                            headers: {
+                                'X-CSRF-TOKEN': getCookie('csrf_access_token')
+                            },
+                            success:function(dataa){
+                                console.log(dataa.data)
+                                var datas = {
+                                "toedit": data.data,
+                                "sdata":dataa.data,
+                                 }
+                                 templateScript = Handlebars.compile($('#modaltemplate').html());
+                                 $("#md").html(templateScript(datas));
+                            }
+                            });
+
+                }
+
+            });
+        }
+        function editbatch(e) {
+         e.preventDefault();
+         var form= $('#eform')[0];
+         var formdata = new FormData(form);
+          $.ajax({
+                    type: "POST",
+                    url: "/admin/updatebatch",
+                    processData: false,
+                    contentType: false,
+                   statusCode: {
+                        401: function () {
+                            window.location.replace("/admin/")
+                        }
+                    },
+                    headers: {
+                        'X-CSRF-TOKEN': getCookie('csrf_access_token')
+                    },
+                    dataType: 'json' ,
+                    beforeSend: function () {
+                      $("#responseupdate").html(suc("info", "processing....please wait"))
+                    },
+                    data: formdata,
+                    success: function (data) {
+                        if(data.suc){
+                            $("#responseupdate").html(suc("success", data.suc))
+                            masterloadtable("", "")
+                        }else{
+                            $("#responseupdate").html(suc("danger", data.err))
+                        }
+
+                    }
+                });
+
+}
+        function deletebatch(id) {
+        bootbox.confirm({
+        size: "small",
+        message: "Are you sure?",
+        callback: function(result){
+            if(result){
+            $.ajax({
+                type: 'POST',
+                url: '/admin/deletebatch',
+                dataType: 'json',
+                statusCode: {
+                    401: function () {
+                        window.location.replace("/admin/")
+                    }
+                },
+                headers: {
+                    'X-CSRF-TOKEN': getCookie('csrf_access_token')
+                },
+                data: {id: id},
+                success: function (data) {
+                    masterloadtable("", "")
+                    bootbox.alert(data.suc)
+                }
+
+        });
+
+            }
+
+        }
+})
+ }
+
+    </script>
+{% endblock %}

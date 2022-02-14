@@ -1,0 +1,394 @@
+{% extends 'admin/base.html' %}
+{% block body %}
+    <div class="container content-area">
+        <div class="row">
+            <div class="col-12">
+                <div class="panel">
+                    <div class="m-b-15">
+                        <div class="row">
+                            <div class="col-md-6 col-lg-6 mb-2">
+                                <h6>Graphic team active members</h6>
+                                <hr/>
+                            </div>
+
+                            <div class=" col-md-6 col-lg-6 mb-2">
+                                <div class="row">
+                                    <div class="col-md-6 col-lg-6 mb-2">
+                                        <button data-target="#addmodal" data-toggle="modal"
+                                                class="btn btn-primary btn-small float-right">
+                                            <i class="ti-plus"></i>
+                                            add member
+                                        </button>
+                                    </div>
+                                    <div class=" col-md-6 col-lg-6 mb-2">
+                                        <input type="search" class="fa form-control" placeholder="&#xf002; Search"
+                                               id="srch">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="tb">
+                            <div class="d-flex justify-content-center">
+                                <div class="spinner-border" role="status">
+                                    <span class="sr-only">Loading...</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+    <div id="addmodal" class="modal fade">
+        <div class="modal-dialog">
+            <!-- Modal content-->
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">Members details</h5>
+                    <button type="button" class="close" data-dismiss="modal">×</button>
+                </div>
+                <div class="modal-body" id="mdadd">
+
+                    <div><h5 class="text-center">Add members</h5></div>
+                    <div id="responseadd"></div>
+                    <form method="post" enctype="multipart/form-data" id="aform" onsubmit="addmembers(event)">
+
+                        <div class="form-group">
+                            <label>Full names</label>
+                            <input type="text" name="fnames" id="fnames" class="form-control" placeholder="Jane doe"
+                                   required autocomplete="off"/>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="desc">Email</label>
+                            <input type="email" name="email" id="email" class="form-control"
+                                   placeholder="Janedoe@gmail.com"
+                                   required autocomplete="off"/>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Phone</label>
+                            <input type="number" name="phone" id="phone" placeholder="0720000000" class="form-control"
+                                   required autocomplete="off"/>
+                        </div>
+
+                        <button id="btncupdate" class="btn btn-primary btn-block">
+                            save
+                        </button>
+
+                    </form>
+
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="myModal" class="modal fade">
+        <div class="modal-dialog">
+            <!-- Modal content-->
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">Members details</h5>
+                    <button type="button" class="close" data-dismiss="modal">×</button>
+                </div>
+                <div class="modal-body" id="md">
+
+                </div>
+            </div>
+        </div>
+    </div>
+    <script id="table-template" type="text/x-handlebars-template">
+{% raw %}
+<div class="table-responsive"  >
+<p>Records found {{ total }}</p>
+  {{#if_cond tabledata '!=' '0'}}
+  <table class="table table-bordered">
+                  <tr>
+                    <th>No</th>
+                    <th>Full names</th>
+                    <th>Phone</th>
+                    <th>Email</th>
+                    <th>Role</th>
+                    <th>Registered at</th>
+                    <th>Action</th>
+                    <th></th>
+
+                  </tr>
+
+        {{#each tabledata}}
+                  <tr>
+                    <td>{{math @index "+" 1	}}</td>
+                    <td>{{toTitleCase name}}</td>
+                    <td>0{{phone}}</td>
+                    <td>{{email}}</td>
+                    <td>{{toTitleCase role}}</td>
+                    <td>{{formatDate time "D/M/YYYY HH:mm"}}</td>
+                    <td>
+                        <a data-target="#myModal" data-toggle="modal" class="btn btn-success btn-sm mb-2" onclick="edit('{{id}}')" >edit</a>
+                        <a  class="btn btn-danger btn-delete btn-sm mb-2" onclick="deletedservice('{{id}}')" >delete</a>
+                    </td>
+                    <td>
+                     <a  data-toggle="modal" class="btn btn-warning btn-sm mb-2" onclick="suspension('{{id}}')">
+                     {{#if_cond status "==" 0}} Suspend {{else}}Activate{{/if_cond}}
+                     </a>
+                    </td>
+
+                  </tr>
+        {{/each }}
+
+  </table>
+  {{/if_cond}}
+</div>
+<ul id="pagination-demo" class="pagination-sm"></ul>
+{% endraw %}
+
+
+
+
+
+
+    </script>
+    <script id="modaltemplate" type="text/x-handlebars-template">
+{% raw %}
+{{#each toedit }}
+ <div><h5 class="text-center">Edit member</h5></div>
+ <div id="responseupdate"></div>
+  <form method="post"  enctype="multipart/form-data" id="eform" onsubmit="editmembers(event)">
+                     <input type="hidden"  name="mid"  id="mid" value="{{id}}">
+                     <div class="form-group">
+                            <label>Full names</label>
+                            <input type="text" name="fnames" id="fnames" value="{{name}}" class="form-control" placeholder="Jane doe"
+                                   required autocomplete="off"/>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="desc">Email</label>
+                            <input type="email" name="email" id="email" value="{{email}}" class="form-control" placeholder="Janedoe@gmail.com"
+                                   required autocomplete="off"/>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Phone</label>
+                            <input type="number" name="phone" id="phone" value="0{{phone}}" placeholder="0720000000" class="form-control"
+                                   required autocomplete="off"/>
+                        </div>
+
+                        <button id="btncupdate" class="btn btn-success btn-block">
+                            Edit
+                        </button>
+
+  </form>
+  {{/each}}
+{% endraw %}
+
+
+
+    </script>
+    <script>
+        $(document).ready(function () {
+            var pag = "";
+            var searchdata = "";
+            masterloadtable("", "")
+
+            $('#srch').keyup(function (e) {
+                var keycode = e.charCode ? e.charCode : e.keyCode;
+                searchdata = $('#srch').val()
+                if (keycode == 13 && searchdata.length > 1) {
+                    masterloadtable(pag, searchdata)
+                } else {
+                    masterloadtable(pag, searchdata)
+                }
+            })
+        });
+
+        function masterloadtable(pg, srch) {
+            $.ajax({
+                type: "POST",
+                url: "/admin/registermembers",
+                data: {pg: pg, srch: srch},
+                dataType: 'json',
+                statusCode: {
+                    401: function () {
+                        window.location.replace("/admin/")
+                    }
+                },
+                headers: {
+                    'X-CSRF-TOKEN': getCookie('csrf_access_token')
+                },
+                success: function (data) {
+                    console.log(data)
+                    var datas = {
+                        "total": data.totalrecords,
+                        "page": data.currentpage,
+                        "tabledata": data.data,
+                    }
+                    templateScript = Handlebars.compile($('#table-template').html());
+                    $("#tb").html(templateScript(datas));
+                    //load my pages'
+                    if (data.totalpages != 'null') {
+                        $('#pagination-demo').twbsPagination({
+                            totalPages: data.totalpages,
+                            visiblePages: 3,
+                            startPage: data.currentpage,
+                            initiateStartPageClick: false,
+                            onPageClick: function (event, page) {
+                                masterloadtable(page, srch)
+                            }
+                        });
+                    }
+                }
+            });
+        }
+
+        function addmembers(e) {
+            e.preventDefault();
+            var form = $('#aform')[0];
+            var formdata = new FormData(form);
+            $.ajax({
+                type: "POST",
+                url: "/admin/addmembers",
+                processData: false,
+                contentType: false,
+                statusCode: {
+                    401: function () {
+                        window.location.replace("/admin/")
+                    }
+                },
+                headers: {
+                    'X-CSRF-TOKEN': getCookie('csrf_access_token')
+                },
+                dataType: 'json',
+                beforeSend: function () {
+                    $("#responseadd").html(suc("info", "processing....please wait"))
+                },
+                data: formdata,
+                success: function (data) {
+                    if (data.suc) {
+                        $("#responseadd").html(suc("success", data.suc))
+                        masterloadtable("", "")
+                        $('#aform')[0].reset()
+                    } else {
+                        $("#responseadd").html(suc("danger", data.err))
+                    }
+
+                }
+            });
+
+        }
+
+        function edit(id) {
+            $.ajax({
+                type: 'POST',
+                url: '/admin/editmembers',
+                dataType: 'json',
+                statusCode: {
+                    401: function () {
+                        window.location.replace("/admin/")
+                    }
+                },
+                headers: {
+                    'X-CSRF-TOKEN': getCookie('csrf_access_token')
+                },
+                data: {id: id},
+                success: function (data) {
+                    console.log(data)
+                    var datas = {"toedit": data.data}
+                    templateScript = Handlebars.compile($('#modaltemplate').html());
+                    $("#md").html(templateScript(datas));
+                }
+
+            });
+        }
+
+        function editmembers(e) {
+         e.preventDefault();
+         var form= $('#eform')[0];
+         var formdata = new FormData(form);
+          $.ajax({
+                    type: "POST",
+                    url: "/admin/updatemembers",
+                    processData: false,
+                    contentType: false,
+                   statusCode: {
+                        401: function () {
+                            window.location.replace("/admin/")
+                        }
+                    },
+                    headers: {
+                        'X-CSRF-TOKEN': getCookie('csrf_access_token')
+                    },
+                    dataType: 'json' ,
+                    beforeSend: function () {
+                      $("#responseupdate").html(suc("info", "processing....please wait"))
+                    },
+                    data: formdata,
+                    success: function (data) {
+                        if(data.suc){
+                            $("#responseupdate").html(suc("success", data.suc))
+                            masterloadtable("", "")
+                        }else{
+                            $("#responseupdate").html(suc("danger", data.err))
+                        }
+
+                    }
+                });
+
+}
+
+        function suspension(id) {
+            $.ajax({
+                type: 'POST',
+                url: '/admin/suspendmembers',
+                dataType: 'json',
+                statusCode: {
+                    401: function () {
+                        window.location.replace("/admin/")
+                    }
+                },
+                headers: {
+                    'X-CSRF-TOKEN': getCookie('csrf_access_token')
+                },
+                data: {id: id},
+                success: function (data) {
+                     masterloadtable("","")
+                     bootbox.alert(data.suc)
+                }
+
+            });
+        }
+
+  function deletedservice(id) {
+    bootbox.confirm({
+    size: "small",
+    message: "Are you sure?",
+    callback: function(result){
+        if(result){
+        $.ajax({
+            type: 'POST',
+            url: '/admin/deletemembers',
+            dataType: 'json',
+            statusCode: {
+                401: function () {
+                    window.location.replace("/admin/")
+                }
+            },
+            headers: {
+                'X-CSRF-TOKEN': getCookie('csrf_access_token')
+            },
+            data: {id: id},
+            success: function (data) {
+                masterloadtable("", "")
+                bootbox.alert(data.suc)
+            }
+
+	});
+
+        }
+
+    }
+})
+ }
+
+    </script>
+{% endblock %}

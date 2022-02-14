@@ -1,0 +1,156 @@
+{% extends 'admin/base.html' %}
+{% block body %}
+    <div class="container content-area">
+        <div class="row">
+            <div class="col-12">
+                <div class="panel">
+                    <div class="m-b-15">
+                        <div class="row">
+                            <div class="col-md-6 col-lg-6 mb-2">
+                                <h6>Graphic team suspended members</h6>
+                                <hr/>
+                            </div>
+
+                            <div class=" col-md-6 col-lg-6 mb-2">
+                                <div class="row">
+                                    <div class=" col-md-6 col-lg-6 center-align ">
+                                        <input type="search" class="fa form-control " placeholder="&#xf002; Search"
+                                               id="srch">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="tb">
+                            <div class="d-flex justify-content-center">
+                                <div class="spinner-border" role="status">
+                                    <span class="sr-only">Loading...</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+    <script id="table-template" type="text/x-handlebars-template">
+{% raw %}
+<div class="table-responsive"  >
+<p>Records found {{ total }}</p>
+  {{#if_cond tabledata '!=' '0'}}
+  <table class="table table-bordered">
+                  <tr>
+                    <th>No</th>
+                    <th>Full names</th>
+                    <th>Phone</th>
+                    <th>Email</th>
+                    <th>Role</th>
+                    <th>Registered at</th>
+                    <th></th>
+
+                  </tr>
+
+        {{#each tabledata}}
+                  <tr>
+                    <td>{{math @index "+" 1	}}</td>
+                    <td>{{toTitleCase name}}</td>
+                    <td>0{{phone}}</td>
+                    <td>{{email}}</td>
+                    <td>{{toTitleCase role}}</td>
+                    <td>{{formatDate time "D/M/YYYY HH:mm"}}</td>
+                    <td>
+                     <a  data-toggle="modal" class="btn btn-success btn-sm mb-2" onclick="suspension('{{id}}')">
+                     {{#if_cond status "==" 0}}Suspend{{else}}Re-admit{{/if_cond}}
+                     </a>
+
+                    </td>
+
+                  </tr>
+        {{/each }}
+
+  </table>
+  {{/if_cond}}
+</div>
+<ul id="pagination-demo" class="pagination-sm"></ul>
+{% endraw %}
+</script>
+    <script>
+        $(document).ready(function () {
+            var pag = "";
+            var searchdata = "";
+            masterloadtable("", "")
+
+            $('#srch').keyup(function (e) {
+                var keycode = e.charCode ? e.charCode : e.keyCode;
+                searchdata = $('#srch').val()
+                if (keycode == 13 && searchdata.length > 1) {
+                    masterloadtable(pag, searchdata)
+                } else {
+                    masterloadtable(pag, searchdata)
+                }
+            })
+        });
+
+        function masterloadtable(pg, srch) {
+            $.ajax({
+                type: "POST",
+                url: "/admin/viewsuspendmembers",
+                data: {pg: pg, srch: srch},
+                dataType: 'json',
+                statusCode: {
+                    401: function () {
+                        window.location.replace("/admin/")
+                    }
+                },
+                headers: {
+                    'X-CSRF-TOKEN': getCookie('csrf_access_token')
+                },
+                success: function (data) {
+                    console.log(data)
+                    var datas = {
+                        "total": data.totalrecords,
+                        "page": data.currentpage,
+                        "tabledata": data.data,
+                    }
+                    templateScript = Handlebars.compile($('#table-template').html());
+                    $("#tb").html(templateScript(datas));
+                    //load my pages'
+                    if (data.totalpages != 'null') {
+                        $('#pagination-demo').twbsPagination({
+                            totalPages: data.totalpages,
+                            visiblePages: 3,
+                            startPage: data.currentpage,
+                            initiateStartPageClick: false,
+                            onPageClick: function (event, page) {
+                                masterloadtable(page, srch)
+                            }
+                        });
+                    }
+                }
+            });
+        }
+        function suspension(id) {
+            $.ajax({
+                type: 'POST',
+                url: '/admin/suspendmembers',
+                dataType: 'json',
+                statusCode: {
+                    401: function () {
+                        window.location.replace("/admin/")
+                    }
+                },
+                headers: {
+                    'X-CSRF-TOKEN': getCookie('csrf_access_token')
+                },
+                data: {id: id},
+                success: function (data) {
+                     masterloadtable("","")
+                     bootbox.alert(data.suc)
+                }
+
+            });
+        }
+
+    </script>
+{% endblock %}

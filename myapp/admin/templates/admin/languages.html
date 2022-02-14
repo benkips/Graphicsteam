@@ -1,0 +1,211 @@
+{% extends 'admin/base.html' %}
+{% block body %}
+ <div class="container content-area">
+        <div class="row">
+          <div class="col-md-4">
+            <div class="panel">
+              <div class="m-b-15">
+                <h6>Languages</h6>
+                <hr />
+              </div>
+              <div class="form-responsive">
+                  <div id="responseadd"></div>
+                <form method="post"  enctype="multipart/form-data" id="lform" onsubmit="addlanguage(event)">
+                  <div class="form-group">
+                    <label for="lang">Enter language</label>
+                    <input type="text" class="form-control" id="lang" name="lang" required autocomplete="off" />
+                    <small id="loco" class="form-text text-muted"
+                      >This is the language of which nuggets should be made of</small>
+                  </div>
+
+                  <button  id="btnsubmit" class="btn btn-primary btn-block">
+                    Add language
+                  </button>
+                </form>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-8">
+            <div class="panel">
+              <div class="m-b-15">
+                <h6>Locations</h6>
+                <hr />
+              </div>
+                 <div class="input-group col-md-6 col-lg-4 float-right">
+                    <input type="search" class="form-control" placeholder="Search" id="srch">
+                 </div>
+                <div id="tb" >
+                    <div class="d-flex justify-content-center">
+                      <div class="spinner-border" role="status">
+                        <span class="sr-only">Loading...</span>
+                      </div>
+                    </div>
+
+
+                </div>
+
+
+            </div>
+
+          </div>
+        </div>
+</div>
+
+<script id="table-template" type="text/x-handlebars-template">
+{% raw %}
+<div class="table-responsive"  >
+<p>Records found {{ total }}</p>
+  {{#if_cond tabledata '!=' '0'}}
+  <table class="table table-bordered">
+                  <tr>
+                    <th>No</th>
+                    <th>language</th>
+                    <th>Action</th>
+                  </tr>
+
+        {{#each tabledata}}
+                  <tr>
+                    <td>{{math @index "+" 1	}}</td>
+                    <td>{{toTitleCase languagename }}</td>
+                    <td>
+                        <a  class="btn btn-danger btn-delete btn-sm mb-2" onclick="deletedlng('{{id}}')" >delete</a>
+                    </td>
+
+                  </tr>
+        {{/each }}
+
+  </table>
+  {{/if_cond}}
+</div>
+<ul id="pagination-demo" class="pagination-sm"></ul>
+
+{% endraw %}
+</script>
+
+<script>
+ $(document).ready(function () {
+     var pag="";
+     var searchdata="";
+    masterloadtable(pag,searchdata)
+
+
+
+    $('#srch').keyup(function(e){
+    var keycode=e.charCode? e.charCode : e.keyCode;
+    searchdata = $('#srch').val()
+        if(keycode==13 && searchdata.length>1) {
+           masterloadtable(pag,searchdata)
+        }else{
+           masterloadtable(pag,searchdata)
+        }
+    })
+
+
+});
+function addlanguage(e) {
+     e.preventDefault();
+     var form= $('#lform')[0];
+     var formdata = new FormData(form);
+      $.ajax({
+                type: "POST",
+                url: "/admin/addlanguages",
+                processData: false,
+                contentType: false,
+                statusCode: {
+                    401: function () {
+                        window.location.replace("/admin/")
+                    }
+                },
+                headers: {
+                    'X-CSRF-TOKEN': getCookie('csrf_access_token')
+                },
+                dataType: 'json' ,
+                beforeSend: function () {
+                  $("#responseadd").html(suc("info", "processing....please wait"))
+                },
+                data: formdata,
+                success: function (data) {
+                    if(data.suc){
+                        $("#responseadd").html(suc("success", data.suc))
+                        $('#lform')[0].reset()
+                        masterloadtable("","")
+                    }else{
+                        $("#responseadd").html(suc("danger", data.err))
+                    }
+
+                }
+            });
+
+}
+function masterloadtable(pg,srch){
+     $.ajax({
+                type: "POST",
+                url: "/admin/languages",
+                data:{pg:pg,srch:srch},
+                statusCode: {
+                    401: function () {
+                        window.location.replace("/admin/")
+                    }
+                },
+                headers: {
+                    'X-CSRF-TOKEN': getCookie('csrf_access_token')
+                },
+                dataType: 'json',
+                success: function (data) {
+                    var datas = {
+                        "total":data.totalrecords,
+                        "page":data.currentpage,
+                        "tabledata": data.data,
+                    }
+                    templateScript = Handlebars.compile($('#table-template').html());
+                    $("#tb").html(templateScript(datas));
+                    //load my pages'
+                        if(data.totalpages!='null') {
+                            $('#pagination-demo').twbsPagination({
+                                totalPages: data.totalpages,
+                                visiblePages: 3,
+                                startPage: data.currentpage,
+                                initiateStartPageClick: false,
+                                onPageClick: function (event, page) {
+                                    masterloadtable(page, srch)
+                                }
+                            });
+                        }
+
+
+                }
+            });
+ }
+function deletedlng(id) {
+    bootbox.confirm({
+    size: "small",
+    message: "Are you sure?",
+    callback: function(result){
+        if(result){
+        $.ajax({
+		type:'POST',
+		url:'/admin/deletelanguages',
+        statusCode: {
+                    401: function () {
+                        window.location.replace("/admin/")
+                    }
+        },
+        headers: {
+                    'X-CSRF-TOKEN': getCookie('csrf_access_token')
+                },
+        dataType: 'json',
+		data:{id:id},
+		success:function(data){
+            masterloadtable("","")
+            bootbox.alert(data.suc)
+		}
+
+	});
+
+        }
+
+    }
+})
+ }
+</script>
+{% endblock %}
